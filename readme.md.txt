@@ -1,7 +1,8 @@
 #Proyecto de Mapa Poblacional del Paraguay.
 
-Este proyecto crea un mapa interactivo del Paraguay, con el que podremos visualizar los datos poblacionales de los distintos distritos.
-Utilizamos archivos geoespaciales y datos poblacionales del país para mostrar el mapa detallado del Paraguay.
+Este proyecto crea un mapa interactivo del Paraguay, con el que podremos visualizar los datos poblacionales de los distintos distritos del Paraguay.
+Para ello utilizamos archhivos geoespaciales y datos poblacionales del país para mostrar el mapa detallado.
+
 
 El proyecto utiliza archivos geoespaciales del Paraguay, también los datos poblacionales. 
 Los archivos necesarios se pueden descargar en los siguientes enlaces:
