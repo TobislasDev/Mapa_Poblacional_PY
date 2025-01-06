@@ -1,8 +1,6 @@
 #Importamos las librerias a utilizar.
 import folium
-from folium.plugins import Search
-from folium.plugins import MarkerCluster
-from folium import plugins
+from folium.plugins import MarkerCluster, HeatMap, MiniMap
 from branca.colormap import linear
 import pandas as pd
 import geopandas as gpd
@@ -22,7 +20,7 @@ def normalizar_texto(texto):
 
 
 #Leemos el archivo shaperfile con la ruta correspondiente
-fg_paraguay_shp= gpd.read_file("datos/Paraguay/Ciudades_Paraguay.shp")
+fg_paraguay_shp= gpd.read_file("Ruta/Ciudades_Paraguay.shp")
 #Generamos un diccionario para poder modificar las tildes y letras como ñ, de tal modo a poder mostrar los datos limpios en pantalla
 reemplazos = {'CONCEPCI�N': 'CONCEPCION',
              'BEL�N': 'BELEN',
@@ -135,16 +133,21 @@ reemplazos = {'CONCEPCI�N': 'CONCEPCION',
              'BAH�A NEGRA':'BAHIA NEGRA',
              'ASUNCI�N':'ASUNCION'}
 
+
+
 #Lectura de archivos adicionales, datos de Asuncion y la poblacion en general.
-fg_asuncion_shp= gpd.read_file("datos/Paraguay/ASUNCION/Departamento_Asuncion.shp")
-fg_poblacion_csv = pd.read_csv("datos/Paraguay/Poblacion_PY.csv")
+fg_asuncion_shp= gpd.read_file("Ruta/Departamento_Asuncion.shp")
+fg_poblacion_csv = pd.read_csv("Ruta/Poblacion_PY.csv")
 reemplazos['ASUNCI�N']='ASUNCION'
+#Archivo para los datos del departamentos.
+fg_departamentos_shp=gpd.read_file("Ruta\Departamentos_Paraguay.shp")
+
 
 fg_asuncion_shp['DPTO_DESC'] = fg_asuncion_shp['DPTO_DESC'].apply(normalizar_texto)
 
 for original, reemplazo in reemplazos.items():
         fg_asuncion_shp['DPTO_DESC'] = fg_asuncion_shp['DPTO_DESC'].replace(original, reemplazo)
-
+      
 #Realizamos los cambios del archivo con nuestro diccionario generado
 for original, reemplazo in reemplazos.items():
     fg_paraguay_shp['DIST_DESC'] = fg_paraguay_shp['DIST_DESC'].replace(original, reemplazo)
@@ -171,21 +174,20 @@ fg_poblacion_csv['2025'] = pd.to_numeric(fg_poblacion_csv['2025'], errors='coerc
 fg_poblacion_csv['2025'] = fg_poblacion_csv['2025'].fillna(0)
 
 def obtener_color(poblacion):
-    if poblacion < 10000:
+    if poblacion < 20000:
         return 'green'
-    elif poblacion < 90000:
-        return 'green'  
-    elif poblacion < 100000:
-        return 'yellow'  
+    elif poblacion < 120000:
+        return 'blue'  
+    elif poblacion < 150000:
+        return 'orange'  
     elif poblacion < 200000:
-        return 'orange' 
+        return 'red' 
     else:
-        return 'red'  
+        return 'darkred'  
 
-#Gneramos una variable de HTML para nuestro texto en el mapa
+#Generamos HTML para implementar en el mapa
 html="""<h3>Distrito:</h3>"""
 map = folium.Map(location= lat_lon, zoom_start=12, titles="Mapbox Bright")
-
 
 fg = MarkerCluster(name="PY MAP")
 #Generamos un titulo para el MAPA
@@ -212,6 +214,46 @@ title_html = '''
 # Añadir el título al mapa
 map.get_root().html.add_child(folium.Element(title_html))
 
+legend_html = '''
+<div style="
+    position: fixed;
+    bottom: 50px;
+    left: 50px;
+    width: 250px;
+    background-color: white;
+    border:2px solid grey;
+    z-index:9999;
+    font-size:14px;
+    padding: 10px;
+">
+<b>Mapa de Población</b><br>
+<span style="background-color:green; color:white;">&nbsp;&nbsp;&nbsp;&nbsp;</span> Menos de 20,000<br>
+<span style="background-color:blue; color:white;">&nbsp;&nbsp;&nbsp;&nbsp;</span> 20,000 - 89,999<br>
+<span style="background-color:orange; color:white;">&nbsp;&nbsp;&nbsp;&nbsp;</span> 90,000 - 120,000<br>
+<span style="background-color:red; color:white;">&nbsp;&nbsp;&nbsp;&nbsp;</span> 120,000 - 199,999<br>
+<span style="background-color:darkred; color:white;">&nbsp;&nbsp;&nbsp;&nbsp;</span> Más de 200,000<br>
+</div>
+'''
+map.get_root().html.add_child(folium.Element(legend_html))
+
+#Vamos a proceder a agregar los polígonos de los departamentos, lo que realiza es lo siguiente, enmarca con una linea negra los limites de los distintos departamentos, esto gracias a nuestro archivo fg_departamento_shp.
+
+folium.GeoJson(
+    fg_departamentos_shp,
+    name='Limites de Departamentos',
+    style_function=lambda x: {
+        'fillColor': 'transparent',
+        'color': 'black',
+        'weight': 1
+    }
+).add_to(map)
+
+#Agregamos un MiniMap, ayuda al usuario a desplazarse por el mapa.
+
+minimap =  MiniMap(toggle_display=True, position="bottomright")
+map.add_child(minimap)
+#Creamos una lista para el mapa de calor
+mapa_calor=[]
 #Añadimos los marcadores para cada ciudad, con este bucle recorremos cada fila de nuestro archivo fg_paraguau_shp, luego buscamos la poblacion correspondiente a cada distrito. 
 for _, row in fg_paraguay_shp.iterrows():
     if row.geometry:  # Validar que la geometría no sea nula
@@ -224,9 +266,10 @@ for _, row in fg_paraguay_shp.iterrows():
             # Buscar la población correspondiente al distrito
             poblacion = fg_poblacion_csv.loc[fg_poblacion_csv['#'] == name, '2025'].values
             if len(poblacion) > 0:
+                mapa_calor.append([punto.y, punto.x, int(poblacion[0])])
                 poblacion_texto =int(poblacion[0])
                 color = obtener_color(poblacion_texto)
-                poblacion_texto = f"Poblacion: {poblacion_texto:,}"
+                poblacion_texto = f"Población: {poblacion_texto:,}"
             else:
                 color='gray' #Agregamos un color por defecto en caso de que no podamos obtener la poblacion
                 poblacion_texto = "Población: No disponible"
@@ -241,6 +284,15 @@ for _, row in fg_paraguay_shp.iterrows():
                     icon=folium.Icon(color=color)
                 )
             )
+if mapa_calor: #validamos y agregamos HeatMap a nuestro mapa
+    heatmap_layer=HeatMap(
+        mapa_calor, 
+        min_opacity=0.4, 
+        radius=15,
+        blur=10,
+        max_zoom=15)
+    
+map.add_child(heatmap_layer)
 map.add_child(fg)
 
 
