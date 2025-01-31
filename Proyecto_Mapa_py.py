@@ -20,7 +20,7 @@ def normalizar_texto(texto):
 
 
 #Leemos el archivo shaperfile con la ruta correspondiente
-fg_paraguay_shp= gpd.read_file("Ruta/Ciudades_Paraguay.shp")
+fg_paraguay_shp= gpd.read_file("C:/Users/tobislasdev/Desktop/Proyecto MAPS/SHP PY/PAIS/PAIS/Ciudades_Paraguay.shp")
 #Generamos un diccionario para poder modificar las tildes y letras como ñ, de tal modo a poder mostrar los datos limpios en pantalla
 reemplazos = {'CONCEPCI�N': 'CONCEPCION',
              'BEL�N': 'BELEN',
@@ -136,11 +136,11 @@ reemplazos = {'CONCEPCI�N': 'CONCEPCION',
 
 
 #Lectura de archivos adicionales, datos de Asuncion y la poblacion en general.
-fg_asuncion_shp= gpd.read_file("Ruta/Departamento_Asuncion.shp")
-fg_poblacion_csv = pd.read_csv("Ruta/Poblacion_PY.csv")
+fg_asuncion_shp= gpd.read_file("C:/Users/tobislasdev/Desktop/Proyecto MAPS/00 ASUNCION/00 ASUNCIÓN/Departamento_Asuncion.shp")
+fg_poblacion_csv = pd.read_csv("C:/Users/tobislasdev/Desktop/Proyecto MAPS/Poblacion_PY.csv")
 reemplazos['ASUNCI�N']='ASUNCION'
 #Archivo para los datos del departamentos.
-fg_departamentos_shp=gpd.read_file("Ruta\Departamentos_Paraguay.shp")
+fg_departamentos_shp=gpd.read_file("C:\\Users\\tobislasdev\\Desktop\\Proyecto MAPS\\SHP PY\\PAIS\\PAIS\\Departamentos_Paraguay.shp")
 
 
 fg_asuncion_shp['DPTO_DESC'] = fg_asuncion_shp['DPTO_DESC'].apply(normalizar_texto)
@@ -187,28 +187,40 @@ def obtener_color(poblacion):
 
 #Generamos HTML para implementar en el mapa
 html="""<h3>Distrito:</h3>"""
-map = folium.Map(location= lat_lon, zoom_start=12, titles="Mapbox Bright")
+map = folium.Map(location=lat_lon, zoom_start=12, tiles="CartoDB Positron")
 
 fg = MarkerCluster(name="PY MAP")
 #Generamos un titulo para el MAPA
-title_html = '''
-   <div style="
+title_html = title_html = '''
+<div style="
     position: absolute;
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
-    background-color: rgba(255, 255, 255, 0.9);
-    padding: 10px 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    font-family: Arial, sans-serif;
-    font-size: 16px;
-    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 12px 24px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 18px;
+    font-weight: 600;
     color: #333;
-    text-align: center;">
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    animation: fadeIn 1s ease-in-out;
+">
     Mapa Interactivo de Paraguay - Población 2025
 </div>
+
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+</style>
 '''
 
 # Añadir el título al mapa
@@ -220,19 +232,52 @@ legend_html = '''
     bottom: 50px;
     left: 50px;
     width: 250px;
-    background-color: white;
-    border:2px solid grey;
-    z-index:9999;
-    font-size:14px;
-    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 14px;
+    padding: 15px;
+    color: #333;
+    transition: all 0.3s ease;  /* Transición suave */
 ">
-<b>Mapa de Población</b><br>
-<span style="background-color:green; color:white;">&nbsp;&nbsp;&nbsp;&nbsp;</span> Menos de 20,000<br>
-<span style="background-color:blue; color:white;">&nbsp;&nbsp;&nbsp;&nbsp;</span> 20,000 - 89,999<br>
-<span style="background-color:orange; color:white;">&nbsp;&nbsp;&nbsp;&nbsp;</span> 90,000 - 120,000<br>
-<span style="background-color:red; color:white;">&nbsp;&nbsp;&nbsp;&nbsp;</span> 120,000 - 199,999<br>
-<span style="background-color:darkred; color:white;">&nbsp;&nbsp;&nbsp;&nbsp;</span> Más de 200,000<br>
+    <b style="font-size: 16px; margin-bottom: 10px; display: block;">Mapa de Población</b>
+    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+        <span style="background-color: green; width: 20px; height: 20px; display: inline-block; margin-right: 10px; border-radius: 4px;"></span>
+        Menos de 20,000
+    </div>
+    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+        <span style="background-color: blue; width: 20px; height: 20px; display: inline-block; margin-right: 10px; border-radius: 4px;"></span>
+        20,000 - 89,999
+    </div>
+    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+        <span style="background-color: orange; width: 20px; height: 20px; display: inline-block; margin-right: 10px; border-radius: 4px;"></span>
+        90,000 - 120,000
+    </div>
+    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+        <span style="background-color: red; width: 20px; height: 20px; display: inline-block; margin-right: 10px; border-radius: 4px;"></span>
+        120,000 - 199,999
+    </div>
+    <div style="display: flex; align-items: center;">
+        <span style="background-color: darkred; width: 20px; height: 20px; display: inline-block; margin-right: 10px; border-radius: 4px;"></span>
+        Más de 200,000
+    </div>
 </div>
+
+<script>
+    // Efecto al pasar el ratón
+    const legend = document.querySelector('div');
+    legend.addEventListener('mouseover', () => {
+        legend.style.backgroundColor = 'rgba(245, 245, 245, 0.98)';
+        legend.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.3)';
+    });
+    legend.addEventListener('mouseout', () => {
+        legend.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        legend.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+    });
+</script>
 '''
 map.get_root().html.add_child(folium.Element(legend_html))
 
@@ -247,6 +292,24 @@ folium.GeoJson(
         'weight': 1
     }
 ).add_to(map)
+
+#Personalizamos con HTML/CSS el ICON.
+
+icon_html = '''
+<div style="
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+">
+    <span style="color: red; font-size: 14px;">📍</span>
+</div>
+'''
 
 #Agregamos un MiniMap, ayuda al usuario a desplazarse por el mapa.
 
@@ -281,7 +344,7 @@ for _, row in fg_paraguay_shp.iterrows():
                     radius=6,
                     popup=folium.Popup(iframe),
                     tooltip=name,
-                    icon=folium.Icon(color=color)
+                    icon=folium.DivIcon(html=icon_html)
                 )
             )
 if mapa_calor: #validamos y agregamos HeatMap a nuestro mapa
@@ -290,7 +353,7 @@ if mapa_calor: #validamos y agregamos HeatMap a nuestro mapa
         min_opacity=0.4, 
         radius=15,
         blur=10,
-        max_zoom=15)
+        max_zoom=10)
     
 map.add_child(heatmap_layer)
 map.add_child(fg)
